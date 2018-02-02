@@ -1,11 +1,28 @@
 pragma solidity ^0.4.16;
 
+contract owned {
+    address public owner;
+
+    function owned() public {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function transferOwnership(address newOwner) onlyOwner public {
+        owner = newOwner;
+    }
+}
+
 interface token { function transferFrom(address _from, address _to, uint256 _value) public returns (bool success); }
 
-contract CZRSnowLocker {
+contract CZRSnowLocker is owned {
     
     address public tokenAddr;
-    address public owner;
+    bool public isPaused = false;
 
     event Lock(address indexed addr, uint index, uint amount);
     event Unlock(address indexed addr, uint index, uint lockAmount, uint rewardAmount);
@@ -20,9 +37,16 @@ contract CZRSnowLocker {
     
     function CZRSnowLocker(address _tokenAddr) public {
         tokenAddr = _tokenAddr;
-        owner = msg.sender;
     }
     
+    function start() onlyOwner public {
+        isPaused = false;
+    }
+    
+    function pause() onlyOwner public {
+        isPaused = true;
+    }
+
     /// @notice impl tokenRecipient interface
     function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData) public {
         require(_token == tokenAddr);
@@ -31,6 +55,7 @@ contract CZRSnowLocker {
     }
 
     function _lock(address addr, uint amount) internal {
+        require(!isPaused);
         require(amount >= 100 ether);
 
         token t = token(tokenAddr);
