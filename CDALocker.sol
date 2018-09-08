@@ -19,7 +19,7 @@ contract owned {
 
 interface token { function transferFrom(address _from, address _to, uint256 _value) public returns (bool success); }
 
-contract CZRLocker is owned {
+contract CDALocker is owned {
     
     event AddLock(address addr, uint index, uint startLockTime, uint lockMonth, uint lockedAmount);
     event RemoveLock(address addr, uint index);
@@ -28,52 +28,52 @@ contract CZRLocker is owned {
     address public tokenAddr;
     address public unlocker;
     
-    struct LockedCZR {
+    struct LockedCDA {
         uint startLockTime;
         uint lockMonth;
         uint lockedAmount;
         uint unlockedAmount;
     }
     
-    mapping(address => LockedCZR[]) public lockedCZRMap;
+    mapping(address => LockedCDA[]) public lockedCDAMap;
     
-    function CZRLocker(address _tokenAddr, address _unlocker) public {
+    function CDALocker(address _tokenAddr, address _unlocker) public {
         tokenAddr = _tokenAddr;
         unlocker = _unlocker;
     }
 
-    /// @notice remove CZR lock (only set all field to 0)
+    /// @notice remove CDA lock (only set all field to 0)
     /// @param addr address to remove lock
     /// @param index index to remove
-    function removeCZRLock(address addr, uint index) onlyOwner public {
-        LockedCZR[] storage lockArr = lockedCZRMap[addr];
+    function removeCDALock(address addr, uint index) onlyOwner public {
+        LockedCDA[] storage lockArr = lockedCDAMap[addr];
         require(lockArr.length > 0 && index < lockArr.length);
     
         delete lockArr[index];      //delete just set all feilds to zero value, not remove item out of array;
         RemoveLock(addr, index);
     }
     
-    /// @notice add CZR lock
+    /// @notice add CDA lock
     /// @param addr address to add lock
     /// @param startLockTime start lock time, 0 for now
-    /// @param amount CZR amount
+    /// @param amount CDA amount
     /// @param lockMonth months to lock
-    function addCZRLock(address addr, uint startLockTime, uint amount, uint lockMonth) onlyOwner public {
+    function addCDALock(address addr, uint startLockTime, uint amount, uint lockMonth) onlyOwner public {
         require(amount > 0);
         if (startLockTime == 0)
             startLockTime = now;
-        lockedCZRMap[addr].push(LockedCZR(startLockTime, lockMonth, amount, 0));
-        uint index = lockedCZRMap[addr].length - 1;
+        lockedCDAMap[addr].push(LockedCDA(startLockTime, lockMonth, amount, 0));
+        uint index = lockedCDAMap[addr].length - 1;
         AddLock(addr, index, startLockTime, lockMonth, amount);
     }
     
-    /// @notice unlock CZR
+    /// @notice unlock CDA
     /// @param addr address to unlock
     /// @param limit max unlock number
-    function unlockCZR(address addr, uint limit) public {
+    function unlockCDA(address addr, uint limit) public {
         require(msg.sender == owner || msg.sender == unlocker);
         
-        LockedCZR[] storage lockArr = lockedCZRMap[addr];
+        LockedCDA[] storage lockArr = lockedCDAMap[addr];
         require(lockArr.length > 0);
         token t = token(tokenAddr);
         
